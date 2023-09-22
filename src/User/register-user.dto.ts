@@ -8,4 +8,6 @@ export class RegisterUserDto {
   @IsString()
   @Length(8, 20)
   password: string;
+
+  userImage: any; // Field to accept the uploaded file
 }
