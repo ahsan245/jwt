@@ -1,7 +1,7 @@
 /* eslint-disable prettier/prettier */
 /* eslint-disable @typescript-eslint/no-unused-vars */
 /* eslint-disable prettier/prettier */
-import { Controller, Post, Body,Get ,Req,UseGuards, UseInterceptors, UnauthorizedException} from '@nestjs/common';
+import { Controller, Post, Body, Get, Req, UseGuards, UseInterceptors, UnauthorizedException, UploadedFile, BadRequestException } from '@nestjs/common';
 
 import { Request } from 'express';
 import { UserService } from './user.service';
@@ -9,14 +9,16 @@ import * as bcrypt from 'bcrypt';
 import { UserGuard } from './user.guard';
 import { LoggingInterceptor, ImageUploadInterceptor } from './logging.interceptor';
 import { RegisterUserDto } from './register-user.dto';
+import { FileUploadMiddleware } from '../middleware/user.upload';
+
+import { FileInterceptor } from '@nestjs/platform-express';
 import fileUpload from 'express-fileupload';
-import { FileUploadMiddleware } from 'src/middleware/user.upload';
 
 
 @Controller('user')
 @UseInterceptors(LoggingInterceptor)
 export class UserController {
-  constructor(private readonly userService: UserService) {}
+  constructor(private readonly userService: UserService) { }
   @Get('profile')
   @UseGuards(UserGuard)
   async getProfile(@Req() req: Request) {
@@ -28,19 +30,41 @@ export class UserController {
   async create(@Req() req: Request, @Body() registerUserDTO: RegisterUserDto) {
     const { username, password } = registerUserDTO;
 
-    // Handle file upload using express-fileupload
-    if (!req.files || Object.keys(req.files).length === 0) {
+    if (!req.files || !req.files.userImage) {
+      throw new BadRequestException('No file uploaded.');
+    }
+
+    const uploadedFile = req.files.userImage as fileUpload.UploadedFile;
+
+    // Call the file upload middleware to handle the file upload
+    await FileUploadMiddleware(req, null, async (err?: any) => {
+      if (err) {
+        throw new UnauthorizedException(err);
+      }
+
+      const filePath = `./userUploads/${uploadedFile.name}`;
+
+      const user = await this.userService.createUser(username, password, 'user', filePath);
+      return { userId: user.id, username: user.username, role: user.role };
+    });
+  }
+
+  @Post('upload')
+  @UseInterceptors(FileInterceptor('file'))
+  async uploadFile(@UploadedFile() file) {
+    // Handle file upload using multer
+    if (!file) {
       throw new UnauthorizedException('No files were uploaded.');
     }
 
-    const userImage = req.files.userImage as fileUpload.UploadedFile;
-
     // Move the uploaded file to your desired destination
-    const filePath = `../uploads/users${userImage.name}`;
-    await userImage.mv(filePath);
+    const filePath = `./userUploads/${file.filename}`;
 
-    const user = await this.userService.createUser(username, password, 'user', filePath);
-    return { userId: user.id, username: user.username, role: user.role };
+
+    // Do something with the file, such as saving it to a database or processing it in some way
+    // ...
+
+    return { filename: file.filename, path: filePath };
   }
 
   @Post('login')
@@ -50,12 +74,12 @@ export class UserController {
   ) {
     const user = await this.userService.findByUsername(username);
     if (!user) {
-      return {message: 'Invalid credentials'};
+      return { message: 'Invalid credentials' };
 
     }
     const isPasswordValid = await bcrypt.compare(password, user.password);
     if (!isPasswordValid) {
-     return {message: 'Invalid credentials'};
+      return { message: 'Invalid credentials' };
     }
     const token = await this.userService.generateJwtToken(user);
     return { token };

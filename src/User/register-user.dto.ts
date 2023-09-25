@@ -1,4 +1,5 @@
 import { IsString, Length } from 'class-validator';
+import { UploadedFile } from 'express-fileupload';
 
 export class RegisterUserDto {
   @IsString()
@@ -9,5 +10,5 @@ export class RegisterUserDto {
   @Length(8, 20)
   password: string;
 
-  userImage: any; // Field to accept the uploaded file
+  userImage: UploadedFile; // Field to accept the uploaded file
 }
