@@ -12,7 +12,7 @@ import { RegisterUserDto } from './register-user.dto';
 import { FileUploadMiddleware } from '../middleware/user.upload';
 
 import { FileInterceptor } from '@nestjs/platform-express';
-import fileUpload from 'express-fileupload';
+import * as  fileUpload from 'express-fileupload';
 
 
 @Controller('user')
@@ -27,44 +27,35 @@ export class UserController {
     return result;
   }
   @Post('register')
-  async create(@Req() req: Request, @Body() registerUserDTO: RegisterUserDto) {
-    const { username, password } = registerUserDTO;
+  async create(@Req() req: Request) {
 
-    if (!req.files || !req.files.userImage) {
+    if (!req.files || !req.files.file) {
+      throw new BadRequestException('No file uploaded.');
+    }
+    const uploadedFile = req.files.file as fileUpload.UploadedFile;
+
+    const filePath = `./uploads/${uploadedFile.name}`;
+
+
+    const user = await this.userService.createUser(req.body.username, req.body.password, 'user', filePath);
+    await uploadedFile.mv(filePath);
+    return { userId: user.id, username: user.username, role: user.role, file: user.file };
+  }
+  @Post('upload')
+  async uploadFile(@Req() req: Request) {
+    if (!req.files || !req.files.file) {
       throw new BadRequestException('No file uploaded.');
     }
 
-    const uploadedFile = req.files.userImage as fileUpload.UploadedFile;
+    const uploadedFile = req.files.file as fileUpload.UploadedFile;
 
-    // Call the file upload middleware to handle the file upload
-    await FileUploadMiddleware(req, null, async (err?: any) => {
-      if (err) {
-        throw new UnauthorizedException(err);
-      }
+    const filePath = `./userUploads/${uploadedFile.name}`;
+    await uploadedFile.mv(filePath);
 
-      const filePath = `./userUploads/${uploadedFile.name}`;
-
-      const user = await this.userService.createUser(username, password, 'user', filePath);
-      return { userId: user.id, username: user.username, role: user.role };
-    });
-  }
-
-  @Post('upload')
-  @UseInterceptors(FileInterceptor('file'))
-  async uploadFile(@UploadedFile() file) {
-    // Handle file upload using multer
-    if (!file) {
-      throw new UnauthorizedException('No files were uploaded.');
-    }
-
-    // Move the uploaded file to your desired destination
-    const filePath = `./userUploads/${file.filename}`;
-
-
-    // Do something with the file, such as saving it to a database or processing it in some way
+    // Save the file to disk or process it further
     // ...
 
-    return { filename: file.filename, path: filePath };
+    return { message: 'File uploaded successfully.' };
   }
 
   @Post('login')

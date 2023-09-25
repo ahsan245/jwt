@@ -1,4 +1,4 @@
-import { IsString, Length } from 'class-validator';
+import { IsString, Length, IsDefined } from 'class-validator';
 import { UploadedFile } from 'express-fileupload';
 
 export class RegisterUserDto {
@@ -10,5 +10,12 @@ export class RegisterUserDto {
   @Length(8, 20)
   password: string;
 
-  userImage: UploadedFile; // Field to accept the uploaded file
+  @IsDefined()
+  file: UploadedFile; // Field to accept the uploaded file
+
+  constructor(username: string, password: string, file: UploadedFile) {
+    this.username = username;
+    this.password = password;
+    this.file = file;
+  }
 }

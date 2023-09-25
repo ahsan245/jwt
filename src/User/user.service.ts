@@ -15,7 +15,7 @@ export class UserService {
   constructor(
     @InjectModel('User') private readonly userModel: Model<User>,
     private readonly authMiddleware: AuthMiddleware,
-  ) {}
+  ) { }
 
   async profile(user: User): Promise<any> {
     return {
@@ -24,13 +24,13 @@ export class UserService {
     };
   }
 
-  async createUser(username: string, password: string, role: string = 'user',userImage:string): Promise<User> {
+  async createUser(username: string, password: string, role: string = 'user', file: string): Promise<User> {
     const hashedPassword = await bcrypt.hash(password, 10);
     const newUser = new this.userModel({
       username,
       password: hashedPassword,
-      userImage,
       role,
+      file,
     });
     return await newUser.save();
   }

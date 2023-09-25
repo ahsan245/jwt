@@ -21,6 +21,9 @@ export class AppModule implements NestModule {
     consumer.apply(AuthMiddleware).forRoutes(
       { path: 'product', method: RequestMethod.ALL },
     );
+    consumer.apply(FileUploadMiddleware).forRoutes('*');
+
+
     // consumer.apply(FileUploadMiddleware).forRoutes(
     //   { path: 'user/register', method: RequestMethod.POST },
     // );
