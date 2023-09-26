@@ -5,6 +5,7 @@ import { Injectable, NestMiddleware} from '@nestjs/common';
 import { Request, Response, NextFunction } from 'express';
 import * as jwt from 'jsonwebtoken';
 
+
 @Injectable()
 export class AuthMiddleware implements NestMiddleware {
 
@@ -16,13 +17,20 @@ export class AuthMiddleware implements NestMiddleware {
     if (!token) {
       return res.status(401).json({ message: 'Authentication token missing' });
     }
-  
+
     try {
       const decoded = jwt.verify(token, 'ashen');
+      const role = decoded['role'];
       req['user'] = decoded;
+
+      if (role !== 'admin') {
+        return res.status(403).json({ message: 'User is not authorized to access this resource' });
+      }
+
       next();
     } catch (err) {
       return res.status(401).json({ message: 'Authentication failed' });
     }
   }
-}
+  }
+

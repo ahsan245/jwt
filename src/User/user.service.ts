@@ -24,13 +24,13 @@ export class UserService {
     };
   }
 
-  async createUser(username: string, password: string, role: string = 'user', file: string): Promise<User> {
+  async createUser(username: string, password: string, role: string = 'user', userImage: string): Promise<User> {
     const hashedPassword = await bcrypt.hash(password, 10);
     const newUser = new this.userModel({
       username,
       password: hashedPassword,
       role,
-      file,
+      userImage,
     });
     return await newUser.save();
   }

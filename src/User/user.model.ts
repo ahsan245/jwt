@@ -5,7 +5,7 @@ export const UserSchema = new mongoose.Schema({
   username: { type: String, required: true },
   password: { type: String, required: true },
   role: { type: String, default: 'user' },
-  file: { type: String, },
+  userImage: { type: String, },
 
 });
 
@@ -13,6 +13,6 @@ export interface User extends mongoose.Document {
   id: string;
   username: string;
   password: string;
-  file: string;
+  userImage: string;
   role: string;
 }

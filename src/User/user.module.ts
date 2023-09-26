@@ -5,10 +5,11 @@ import { UserController } from './user.controller';
 import { UserService } from './user.service';
 import { UserSchema } from './user.model';
 import { AuthMiddleware } from '../middleware/auth.middleware';
+import { FileUploadMiddleware } from '../middleware/user.upload';
 
 @Module({
   imports: [MongooseModule.forFeature([{ name: 'User', schema: UserSchema }])],
   controllers: [UserController],
-  providers: [UserService,AuthMiddleware],
+  providers: [UserService,AuthMiddleware,FileUploadMiddleware],
 })
 export class UserModule {}

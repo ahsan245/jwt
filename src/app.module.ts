@@ -1,3 +1,4 @@
+/* eslint-disable prettier/prettier */
 /* eslint-disable @typescript-eslint/no-unused-vars */
 /* eslint-disable prettier/prettier */
 import { Module, NestModule, MiddlewareConsumer, RequestMethod } from '@nestjs/common';
@@ -7,21 +8,24 @@ import { UserModule } from './user/user.module';
 import { MongooseModule } from '@nestjs/mongoose'; // Import MongooseModule
 import { AuthMiddleware } from './middleware/auth.middleware';
 import { FileUploadMiddleware } from './middleware/user.upload';
+import { CompanyModule } from './Company/company.module';
+
 
 @Module({
   imports: [
     MongooseModule.forRoot('mongodb://127.0.0.1:27017/nest-js'),
-    UserModule
+    UserModule,
+    CompanyModule,
   ], // Include the UserModule
   controllers: [AppController],
-  providers: [AppService],
+  providers: [AppService,],
 })
 export class AppModule implements NestModule {
   configure(consumer: MiddlewareConsumer) {
     consumer.apply(AuthMiddleware).forRoutes(
-      { path: 'product', method: RequestMethod.ALL },
+      { path: 'user/profile', method: RequestMethod.GET },
     );
-    consumer.apply(FileUploadMiddleware).forRoutes('*');
+     consumer.apply(FileUploadMiddleware).forRoutes('user/register');
 
 
     // consumer.apply(FileUploadMiddleware).forRoutes(

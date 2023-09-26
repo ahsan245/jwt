@@ -9,10 +9,10 @@ import * as bcrypt from 'bcrypt';
 import { UserGuard } from './user.guard';
 import { LoggingInterceptor, ImageUploadInterceptor } from './logging.interceptor';
 import { RegisterUserDto } from './register-user.dto';
-import { FileUploadMiddleware } from '../middleware/user.upload';
 
-import { FileInterceptor } from '@nestjs/platform-express';
 import * as  fileUpload from 'express-fileupload';
+import { FileInterceptor } from '@nestjs/platform-express';
+import { FileUploadMiddleware } from 'src/middleware/user.upload';
 
 
 @Controller('user')
@@ -20,27 +20,49 @@ import * as  fileUpload from 'express-fileupload';
 export class UserController {
   constructor(private readonly userService: UserService) { }
   @Get('profile')
-  @UseGuards(UserGuard)
   async getProfile(@Req() req: Request) {
     const user = req['user'];
     const result = await this.userService.profile(user);
     return result;
   }
+
   @Post('register')
-  async create(@Req() req: Request) {
+  async create(@Req() req,@Body() registerUserDto: RegisterUserDto) {
+    const { username, password, role} = registerUserDto;
 
-    if (!req.files || !req.files.file) {
-      throw new BadRequestException('No file uploaded.');
-    }
-    const uploadedFile = req.files.file as fileUpload.UploadedFile;
+    const filePath = `./uploads/${req.files.userImage.name}`;
+    const user = await this.userService.createUser(username, password, role, filePath);
+    await req.files.userImage.mv(filePath);
 
-    const filePath = `./uploads/${uploadedFile.name}`;
-
-
-    const user = await this.userService.createUser(req.body.username, req.body.password, 'user', filePath);
-    await uploadedFile.mv(filePath);
-    return { userId: user.id, username: user.username, role: user.role, file: user.file };
+    return { userId: user.id, username: user.username, role: user.role, userImage: user.userImage };
   }
+
+
+
+
+  // @Post('register')
+  // async create(@Req() req, @Body() registerUserDto: RegisterUserDto) {
+  //   const { username, password, role, file } = registerUserDto;
+
+  //   if (!req.files.file) {
+  //     throw new BadRequestException('No file uploaded.');
+  //   }
+
+  //   if (!req.files.file.mimetype.startsWith('image/')) {
+  //     throw new BadRequestException('Only images are allowed.');
+  //   }
+
+  //   if (!['.jpg', '.png'].includes(req.files.file.name.slice(-4))) {
+  //     throw new BadRequestException('Only .jpg and .png files are allowed.');
+  //   }
+
+  //   const filePath = `./uploads/${req.files.file.name}`;
+  //   const user = await this.userService.createUser(username, password, role, filePath);
+  //   await req.files.file.mv(filePath);
+
+  //   return { userId: user.id, username: user.username, role: user.role, file: user.file };
+  // }
+
   @Post('upload')
   async uploadFile(@Req() req: Request) {
     if (!req.files || !req.files.file) {
@@ -76,4 +98,5 @@ export class UserController {
     return { token };
   }
 }
+
 
