@@ -1,7 +1,7 @@
 /* eslint-disable prettier/prettier */
 /* eslint-disable @typescript-eslint/no-unused-vars */
 /* eslint-disable prettier/prettier */
-import { Controller, Post, Body, Get, Req, UseGuards, UseInterceptors, UnauthorizedException, UploadedFile, BadRequestException } from '@nestjs/common';
+import { Controller, Post, Body, Get, Req, UseGuards, UseInterceptors, UnauthorizedException, UploadedFile, BadRequestException, Param, NotFoundException } from '@nestjs/common';
 
 import { Request } from 'express';
 import { UserService } from './user.service';
@@ -37,7 +37,16 @@ export class UserController {
     return { userId: user.id, username: user.username, role: user.role, userImage: user.userImage };
   }
 
+// In user.controller.ts
+@Get(':id')
+async getUser(@Param('id') id: string) {
+  const user = await this.userService.getUserById(id);
+  if (!user) {
+    return { message: `User with ID ${id} not found` };
 
+  }
+  return user;
+}
 
 
   // @Post('register')
@@ -79,6 +88,7 @@ export class UserController {
 
     return { message: 'File uploaded successfully.' };
   }
+
 
   @Post('login')
   async loginUser(

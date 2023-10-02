@@ -1,4 +1,3 @@
-/* eslint-disable prettier/prettier */
 /* eslint-disable @typescript-eslint/no-unused-vars */
 /* eslint-disable prettier/prettier */
 import { Module, NestModule, MiddlewareConsumer, RequestMethod } from '@nestjs/common';
@@ -13,7 +12,7 @@ import { CompanyModule } from './Company/company.module';
 
 @Module({
   imports: [
-    MongooseModule.forRoot('mongodb://127.0.0.1:27017/nest-js'),
+    MongooseModule.forRoot('mongodb+srv://root:root@cluster0.irsxteg.mongodb.net/nest-js'),
     UserModule,
     CompanyModule,
   ], // Include the UserModule

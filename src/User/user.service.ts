@@ -1,9 +1,9 @@
 /* eslint-disable prettier/prettier */
 /* eslint-disable @typescript-eslint/no-unused-vars */
 /* eslint-disable prettier/prettier */
-import { Injectable } from '@nestjs/common';
+import { BadRequestException, Injectable, NotFoundException } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
-import { Model } from 'mongoose';
+import { Model, Types } from 'mongoose';
 import * as bcrypt from 'bcrypt';
 import { AuthMiddleware } from '../middleware/auth.middleware';
 import { User } from './user.model';
@@ -23,6 +23,22 @@ export class UserService {
       user,
     };
   }
+
+  // In user.service.ts
+
+// In user.service.ts
+async getUserById(id: string): Promise<User> {
+  try {
+    const objectId = new Types.ObjectId(id);
+    const user = await this.userModel.findById(objectId);
+    if (!user) {
+      throw new NotFoundException(`User with ID ${id} not found`);
+    }
+    return user;
+  } catch (error) {
+    throw new BadRequestException('Invalid user ID');
+  }
+}
 
   async createUser(username: string, password: string, role: string = 'user', userImage: string): Promise<User> {
     const hashedPassword = await bcrypt.hash(password, 10);
